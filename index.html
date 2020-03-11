@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<textarea id="input" rows="30" cols="90">
+	</textarea>
+
+<input id="translate" type="button" value="转换"/>
+<textarea id="output" rows="30" cols="90">
+	</textarea>
+
+
+</body>
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous">
+</script>
+
+<script type="text/javascript">
+
+    var gList;
+    /**定义正则表达式开始**/
+
+
+    var pattern1 = /[~|,|/| |;|；|、]/;
+
+    var re = /^[0-9]+.?[0-9]*$/;//判断字符串是否为数字 //判断正整数
+
+    var pattern2 = /^([\w\W]*)[~]([\w\W]*)$/; //匹配 PT-1B264A~D
+
+    var pattern3 = /^([\w\W]*)[~]([\w\W]*[、][\w\W]*)[~]([\w\W]*)$/; //匹配 PT-1B264A~D
+
+    var pattern4 = /[、]/;
+
+    /**定义正则表达式结束**/
+
+    function begin(){
+    	 gList = new Array();
+    }
+      function end(){
+    	gList.length = 0;
+    }
+
+
+    $('#translate').on('click', function () {
+        begin();
+        var str = $('#input').val().trim();
+        split(str);
+        $('#output').val(gList);
+        end();
+    });
+
+    function split(str) {
+        if (pattern3.test(str)) {
+            var array = str.split(pattern4);
+            for (var i = 0; i < array.length; i++) {
+                split(array[i]);
+            }
+        } else {
+        	 var array = str.split(pattern1);
+        	 console.log("Array --> " + array)
+            for (var i = 0; i < array.length; i++) {
+                //判断是否为单个字符
+                if (array[i].length == 1) {
+                    var s = array[i - 1];
+                    //判断字母或者数字
+                    console.log(array[i - 1])
+                    array[i] = s.substring(0, s.length - 1) + array[i];
+                }
+            }
+            var result = ziFuShuZi(array);
+            console.log("Result --> " + result)
+            gList = gList.concat(ziFuShuZi(array))
+            console.log("GList --> " + gList)
+            return;
+        }
+    }
+
+
+    function ziFuShuZi(array) {
+        var list = new Array();
+        try {
+            if (array.length != 2) {
+                return array;
+            }
+            var first = array[0];
+            var last = array[1];
+            var f = first.charAt(first.length - 1);
+            var t = f;
+            var l = last.charAt(last.length - 1);
+            var cf = f.charCodeAt(0);
+            var lf = l.charCodeAt(0);
+
+            //charCodeAt()
+            if (f >= 'A' && f <= 'Z' || (f >= 'a' && f <= 'z')) {
+                //字母
+                while (cf <= lf) {
+                    list.push(first.replace(t, String.fromCharCode(cf)));
+                    cf++;
+                }
+            } else if (f >= '0' && f <= '9') {
+                //数字,往前面找到非数字位
+                var array1 = lastShuZi(first);
+            
+                var firstSub = array1[1];
+                var array2 = lastShuZi(last);
+             
+
+                var lastSub = array2[1];
+                if (re.test(firstSub) && firstSub.indexOf('-') <= 0) {
+                    var r = first.substring(0, array1[0]);
+                    var r2 = last.substring(0, array2[0]);
+                    while (firstSub <= lastSub) {
+                        list.push(r2 + firstSub);
+                        firstSub++;
+                    }
+                } else {
+                    return array;
+                }
+            }
+            return list;
+        } catch (err) {
+            return array;
+        }
+    }
+
+
+function lastShuZi( str) {
+	var array = new Array();
+	for (var i = 0, length = str.length; i < length; i++) {
+        //当前第i个字符
+        var aChar = str.charAt(i);
+        if (aChar >= '0' && aChar <= '9') {
+        	var index = str.indexOf(aChar);
+        	array.push(index-1);
+        	array.push(str.substring(index));
+        	return array;
+        }
+    }
+    return array;
+}
+
+</script>
+
+</html>
