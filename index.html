@@ -36,11 +36,12 @@
 
     /**定义正则表达式结束**/
 
-    function begin(){
-    	 gList = new Array();
+    function begin() {
+        gList = new Array();
     }
-      function end(){
-    	gList.length = 0;
+
+    function end() {
+        gList.length = 0;
     }
 
 
@@ -59,8 +60,8 @@
                 split(array[i]);
             }
         } else {
-        	 var array = str.split(pattern1);
-        	 console.log("Array --> " + array)
+            var array = str.split(pattern1);
+            console.log("Array --> " + array)
             for (var i = 0; i < array.length; i++) {
                 //判断是否为单个字符
                 if (array[i].length == 1) {
@@ -103,15 +104,16 @@
             } else if (f >= '0' && f <= '9') {
                 //数字,往前面找到非数字位
                 var array1 = lastShuZi(first);
-            
+
                 var firstSub = array1[1];
                 var array2 = lastShuZi(last);
-             
+
 
                 var lastSub = array2[1];
                 if (re.test(firstSub) && firstSub.indexOf('-') <= 0) {
-                    var r = first.substring(0, array1[0]);
-                    var r2 = last.substring(0, array2[0]);
+                    var r = first.substring(0, array1[0]+1);
+                    var r2 = last.substring(0, array2[0]+1);
+                    console.log("r-->" + r + ", r2-->" +r2)
                     while (firstSub <= lastSub) {
                         list.push(r2 + firstSub);
                         firstSub++;
@@ -127,20 +129,20 @@
     }
 
 
-function lastShuZi( str) {
-	var array = new Array();
-	for (var i = 0, length = str.length; i < length; i++) {
-        //当前第i个字符
-        var aChar = str.charAt(i);
-        if (aChar >= '0' && aChar <= '9') {
-        	var index = str.indexOf(aChar);
-        	array.push(index-1);
-        	array.push(str.substring(index));
-        	return array;
+    function lastShuZi(str) {
+        var array = new Array();
+        for (var i = 0, length = str.length; i < length; i++) {
+            //当前第i个字符
+            var aChar = str.charAt(i);
+            if (aChar >= '0' && aChar <= '9') {
+                var index = str.indexOf(aChar);
+                array.push(index - 1);
+                array.push(str.substring(index));
+                return array;
+            }
         }
+        return array;
     }
-    return array;
-}
 
 </script>
 
