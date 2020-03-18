@@ -5,8 +5,11 @@
     <title>Title</title>
 </head>
 <body>
-<textarea id="input" rows="30" cols="90">
+<textarea id="input" rows="30" cols="45">
 	</textarea>
+*
+<input id="multiple" />倍
+
 
 <input id="translate" type="button" value="转换"/>
 <textarea id="output" rows="30" cols="90">
@@ -20,19 +23,21 @@
 
 <script type="text/javascript">
 
-    var gList;
+    /*定义全局输出列表*/
+    let gList;
+
     /**定义正则表达式开始**/
 
+    /*分割 LT3388~LT3390 ; FT-1123a/b/c ; PT-1B261A,B ;PT-1B264A~D ; PT-205-1/2 ; PT-205 PT-206 PT-207 ; PT-205/PT-206/PT-207 */
+    let pattern1 = /[~|,|，|/| |;|；|、]/;
 
-    var pattern1 = /[~|,|/| |;|；|、]/;
+    /*判断字符串是否为数字*/
+    let pattern2 = /^[0-9]+.?[0-9]*$/;
 
-    var re = /^[0-9]+.?[0-9]*$/;//判断字符串是否为数字 //判断正整数
+    /*匹配 LT3388~LT3390、LT3366~LT3370  ;  LT3388~LT3390；LT3366~LT3371 ;LT3388~LT3390，LT3366~LT3372 ; LT3388~LT3390/LT3366~LT3373*/
+    let pattern3 = /^([\w\W]*)[~]([\w\W]*[、|;|；|,|，|/][\w\W]*)[~]([\w\W]*)$/;
 
-    var pattern2 = /^([\w\W]*)[~]([\w\W]*)$/; //匹配 PT-1B264A~D
-
-    var pattern3 = /^([\w\W]*)[~]([\w\W]*[、][\w\W]*)[~]([\w\W]*)$/; //匹配 PT-1B264A~D
-
-    var pattern4 = /[、]/;
+    let pattern4 = /[、|;|；|,|，|/]/;
 
     /**定义正则表达式结束**/
 
@@ -44,34 +49,41 @@
         gList.length = 0;
     }
 
-
+    /*按钮点击事件*/
     $('#translate').on('click', function () {
         begin();
-        var str = $('#input').val().trim();
+        let str = $('#input').val().trim();
         split(str);
+        let multiple = $('#multiple').val().trim();
+        if(multiple.length > 0 && multiple > 0){
+            let list = new Array();
+            for (let i = 0; i < multiple; i++) {
+                list = list.concat(gList);
+            }
+            gList = list ;
+        }
         $('#output').val(gList);
         end();
     });
 
     function split(str) {
         if (pattern3.test(str)) {
-            var array = str.split(pattern4);
-            for (var i = 0; i < array.length; i++) {
+            let array = str.split(pattern4);
+            for (let i = 0; i < array.length; i++) {
                 split(array[i]);
             }
         } else {
-            var array = str.split(pattern1);
-            console.log("Array --> " + array)
-            for (var i = 0; i < array.length; i++) {
+            let array = str.split(pattern1);
+            for (let i = 0; i < array.length; i++) {
                 //判断是否为单个字符
                 if (array[i].length == 1) {
-                    var s = array[i - 1];
+                    let s = array[i - 1];
                     //判断字母或者数字
                     console.log(array[i - 1])
                     array[i] = s.substring(0, s.length - 1) + array[i];
                 }
             }
-            var result = ziFuShuZi(array);
+            let result = ziFuShuZi(array);
             console.log("Result --> " + result)
             gList = gList.concat(ziFuShuZi(array))
             console.log("GList --> " + gList)
@@ -80,47 +92,42 @@
     }
 
 
+    /*通过pattern 分割字符串 */
     function ziFuShuZi(array) {
-        var list = new Array();
+        console.log("Array --> " + array)
+        let list = new Array();
         try {
             if (array.length != 2) {
                 return array;
             }
-            var first = array[0];
-            var last = array[1];
-            var f = first.charAt(first.length - 1);
-            var t = f;
-            var l = last.charAt(last.length - 1);
-            var cf = f.charCodeAt(0);
-            var lf = l.charCodeAt(0);
-
-            //charCodeAt()
-            if (f >= 'A' && f <= 'Z' || (f >= 'a' && f <= 'z')) {
+            let first = array[0];
+            let last = array[1];
+            let f = first.charAt(first.length - 1);
+            let t = f;
+            let l = last.charAt(last.length - 1);
+            let cf = f.charCodeAt(0);
+            let lf = l.charCodeAt(0);
+            console.log('CF--> ' + cf + ", LF--> " + lf);
+            let flag = cf == lf;
+            //处理末位为字母且不相同的情况
+            if ((f >= 'A' && f <= 'Z' || (f >= 'a' && f <= 'z')) && !flag) {
                 //字母
                 while (cf <= lf) {
                     list.push(first.replace(t, String.fromCharCode(cf)));
                     cf++;
                 }
-            } else if (f >= '0' && f <= '9') {
+            }
+            //处理末位为字母且相同的情况
+            else if ((f >= 'A' && f <= 'Z' || (f >= 'a' && f <= 'z')) && flag) {
+                first = first.substring(0, first.length - 1);
+                last = last.substring(0, last.length - 1);
+                console.log("--> " + first + ", --> " + last)
+                return lastShuZiDeal(array, first, last, f);
+            }
+            // //处理末位为数字的情况
+            else if (f >= '0' && f <= '9') {
                 //数字,往前面找到非数字位
-                var array1 = lastShuZi(first);
-
-                var firstSub = array1[1];
-                var array2 = lastShuZi(last);
-
-
-                var lastSub = array2[1];
-                if (re.test(firstSub) && firstSub.indexOf('-') <= 0) {
-                    var r = first.substring(0, array1[0]+1);
-                    var r2 = last.substring(0, array2[0]+1);
-                    console.log("r-->" + r + ", r2-->" +r2)
-                    while (firstSub <= lastSub) {
-                        list.push(r2 + firstSub);
-                        firstSub++;
-                    }
-                } else {
-                    return array;
-                }
+                return lastShuZiDeal(array, first, last, "");
             }
             return list;
         } catch (err) {
@@ -128,14 +135,41 @@
         }
     }
 
+    /*处理末位为数字的情况*/
+    function lastShuZiDeal(array, first, last, lastWord) {
+        let list = new Array();
+        let array1 = lastNotShuZi(first);
+        let firstSub = array1[1];
+        let array2 = lastNotShuZi(last);
+        let lastSub = array2[1];
+        console.log('Array1--> ' + array1 + ', Array2--> ' + array2);
+        if (pattern2.test(firstSub) && firstSub.indexOf('-') <= 0) {
+            let r = first.substring(0, array1[0] + 1);
+            let r2 = last.substring(0, array2[0] + 1);
+            console.log("r-->" + r + ", r2-->" + r2)
+            while (firstSub <= lastSub) {
+                console.log("LastWord--> " + lastWord)
+                if (lastWord.length > 0) {
+                    list.push(r2 + firstSub + lastWord);
+                } else {
+                    list.push(r2 + firstSub);
+                }
+                firstSub++;
+            }
+        } else {
+            list = array;
+        }
+        return list;
+    }
 
-    function lastShuZi(str) {
-        var array = new Array();
-        for (var i = 0, length = str.length; i < length; i++) {
+    /*找到非数字最后一位*/
+    function lastNotShuZi(str) {
+        let array = new Array();
+        for (let i = 0, length = str.length; i < length; i++) {
             //当前第i个字符
-            var aChar = str.charAt(i);
+            let aChar = str.charAt(i);
             if (aChar >= '0' && aChar <= '9') {
-                var index = str.indexOf(aChar);
+                let index = str.indexOf(aChar);
                 array.push(index - 1);
                 array.push(str.substring(index));
                 return array;
