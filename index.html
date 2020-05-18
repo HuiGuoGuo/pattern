@@ -2,18 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Pattern</title>
 </head>
 <body>
-<textarea id="input" rows="30" cols="45">
-	</textarea>
+<textarea id="input" rows="30" cols="50"></textarea>
 *
 <input id="multiple" />倍
 
 
 <input id="translate" type="button" value="转换"/>
-<textarea id="output" rows="30" cols="90">
-	</textarea>
+<textarea id="output" rows="30" cols="50"></textarea>
+共<label id="count">0</label>条
 
 
 </body>
@@ -29,7 +28,7 @@
     /**定义正则表达式开始**/
 
     /*分割 LT3388~LT3390 ; FT-1123a/b/c ; PT-1B261A,B ;PT-1B264A~D ; PT-205-1/2 ; PT-205 PT-206 PT-207 ; PT-205/PT-206/PT-207 */
-    let pattern1 = /[~|,|，|/| |;|；|、]/;
+    let pattern1 = /[~|,|，|/| |;|；|、|-]/;
 
     /*判断字符串是否为数字*/
     let pattern2 = /^[0-9]+.?[0-9]*$/;
@@ -37,8 +36,10 @@
     /*匹配 LT3388~LT3390、LT3366~LT3370  ;  LT3388~LT3390；LT3366~LT3371 ;LT3388~LT3390，LT3366~LT3372 ; LT3388~LT3390/LT3366~LT3373*/
     let pattern3 = /^([\w\W]*)[~]([\w\W]*[、|;|；|,|，|/][\w\W]*)[~]([\w\W]*)$/;
 
+    /*分隔符*/
     let pattern4 = /[、|;|；|,|，|/]/;
 
+    let pattern5 = /^[a-z|A-Z]*$/
     /**定义正则表达式结束**/
 
     function begin() {
@@ -63,6 +64,7 @@
             gList = list ;
         }
         $('#output').val(gList);
+        $('label').text(gList.length)
         end();
     });
 
@@ -74,15 +76,35 @@
             }
         } else {
             let array = str.split(pattern1);
+            console.log(array)
+            let prefix = "";
             for (let i = 0; i < array.length; i++) {
+                let s = array[i - 1];
+                let si = array[i];
+                let sL = si.length;
                 //判断是否为单个字符
-                if (array[i].length == 1) {
-                    let s = array[i - 1];
-                    //判断字母或者数字
-                    console.log(array[i - 1])
-                    array[i] = s.substring(0, s.length - 1) + array[i];
+                if (sL == 1) {
+                    array[i] = s.substring(0, sL - 1) + si;
+                    //匹配 PT1101~1105
+                }else if ( sL > 1 && pattern2.test(si) ){
+                    let arrayTmp = lastNotShuZi(s);
+                    array[i] = s.substring(0, arrayTmp[0]+1) + si;
+                    //处理 PT-10302a-o的情况
+                }else if (sL > 1 && pattern5.test(si)){
+                    let sp = str.substring(sL,sL +1)
+                    if(pattern1.test(sp)){
+                        prefix = si + sp;
+                        array.splice(i,1)
+                        array[0] = prefix + array[0]
+                    }
+                continue;
+                }
+                if(prefix.length > 0 && si.indexOf(prefix) == -1){
+                    array[i] = prefix +  si;
+                    console.log(array)
                 }
             }
+
             let result = ziFuShuZi(array);
             console.log("Result --> " + result)
             gList = gList.concat(ziFuShuZi(array))
