@@ -5,9 +5,33 @@
     <title>Pattern</title>
 </head>
 <body>
+现已支持的格式如下:
+<br>
+<textarea rows="20" cols="50">
+    1.LT3388~LT3390
+    2.PT-1B261A,B
+    3.PT-1B264A~D
+    4.PT-205-1/2
+    5.PT-205 PT-206 PT-207
+    6.PT-205/PT-206/PT-207
+    7.LT3388~LT3390、LT3366~LT3370
+    8.LT3388~LT3390；LT3366~LT3371
+    9.LT3388~LT3390，LT3366~LT3372
+    10.LT3388~LT3390/LT3366~LT3373
+    11.LT3388A~LT3399A
+    12.LT3388A~LT3399A、LT3366B~LT3370B
+    13.LT3388A~LT3399A；LT3366B~LT3370B
+    14.LT3388A~LT3399A，LT3366B~LT3370B
+    15.LT3388A~LT3399A/LT3366B~LT3370B
+    16.PT-10302a-o
+    17.PT-201~209
+    18.PT1101~1105
+</textarea>
+
+<br>
 <textarea id="input" rows="30" cols="50"></textarea>
 *
-<input id="multiple" />倍
+<input id="multiple"/>倍
 
 
 <input id="translate" type="button" value="转换"/>
@@ -40,6 +64,11 @@
     let pattern4 = /[、|;|；|,|，|/]/;
 
     let pattern5 = /^[a-z|A-Z]*$/
+
+    /*匹配 PT-205-1/2 */
+    let pattern6 = /^[a-z|A-Z]+[-][0-9]+[-][0-9]+[/][0-9]+$/;
+
+    let pattern7 = /^[0-9]+[a-z]+$/
     /**定义正则表达式结束**/
 
     function begin() {
@@ -56,12 +85,12 @@
         let str = $('#input').val().trim();
         split(str);
         let multiple = $('#multiple').val().trim();
-        if(multiple.length > 0 && multiple > 0){
+        if (multiple.length > 0 && multiple > 0) {
             let list = new Array();
             for (let i = 0; i < multiple; i++) {
                 list = list.concat(gList);
             }
-            gList = list ;
+            gList = list;
         }
         $('#output').val(gList);
         $('label').text(gList.length)
@@ -77,40 +106,60 @@
         } else {
             let array = str.split(pattern1);
             console.log(array)
+            array = unique(array)
             let prefix = "";
             for (let i = 0; i < array.length; i++) {
                 let s = array[i - 1];
                 let si = array[i];
                 let sL = si.length;
                 //判断是否为单个字符
-                if (sL == 1) {
+                if (pattern6.test(str) && i == 0) {
+                    if (i == 0) {
+                        let sp = str.substring(sL, sL + 1)
+                        prefix = si + sp + array[i + 1] + sp
+                        array.splice(i, 1)
+                        array[0] = prefix  + array[1]
+                    }
+                    continue;
+                } else if (sL == 1) {
                     array[i] = s.substring(0, sL - 1) + si;
                     //匹配 PT1101~1105
-                }else if ( sL > 1 && pattern2.test(si) ){
+                } else if (sL > 1 && pattern2.test(si)) {
                     let arrayTmp = lastNotShuZi(s);
-                    array[i] = s.substring(0, arrayTmp[0]+1) + si;
+                    array[i] = s.substring(0, arrayTmp[0] + 1) + si;
                     //处理 PT-10302a-o的情况
-                }else if (sL > 1 && pattern5.test(si)){
-                    let sp = str.substring(sL,sL +1)
-                    if(pattern1.test(sp)){
+                } else if (sL > 1 && pattern5.test(si)) {
+                    let sp = str.substring(sL, sL + 1)
+                    if (pattern1.test(sp)) {
                         prefix = si + sp;
-                        array.splice(i,1)
+                        array.splice(i, 1)
                         array[0] = prefix + array[0]
                     }
-                continue;
+                    continue;
                 }
-                if(prefix.length > 0 && si.indexOf(prefix) == -1){
-                    array[i] = prefix +  si;
+                if (prefix.length > 0 && si.indexOf(prefix) == -1) {
+                    array[i] = prefix + si;
                     console.log(array)
                 }
             }
-
+            array = unique(array)
             let result = ziFuShuZi(array);
             console.log("Result --> " + result)
             gList = gList.concat(ziFuShuZi(array))
             console.log("GList --> " + gList)
             return;
         }
+    }
+
+    /*数组去重 */
+    function unique(arr){
+        let newArr = [];
+        for(let i = 0; i < arr.length; i++){
+            if(newArr.indexOf(arr[i]) == -1){
+                newArr.push(arr[i])
+            }
+        }
+        return newArr;
     }
 
 
@@ -198,6 +247,10 @@
             }
         }
         return array;
+    }
+
+    function pattern6Deal() {
+
     }
 
 </script>
